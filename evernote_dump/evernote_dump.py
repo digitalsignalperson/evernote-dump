@@ -24,6 +24,7 @@ if __name__ == "__main__":
                                  'used if your terminal supports wildcard expansion.')
     arg_parser.add_argument('-p', action='store_true',
                             help='Preserve original filenames for attachments.')
+    arg_parser.add_argument('--path')
     arg_parser.parse_args(namespace=settings)
 
     if len(sys.argv) == 1:

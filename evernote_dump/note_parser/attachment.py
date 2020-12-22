@@ -14,7 +14,7 @@ class Attachment(object):
     File name extension is guessed from mime type if not found.
     """
     MEDIA_PATH = "media/"
-    TIME_FORMAT = "%Y-%m-%d_%H-%M-%S"
+    TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
     def __init__(self):
         self._created_date = datetime.now()
@@ -35,30 +35,34 @@ class Attachment(object):
         path = os.path.join(make_dir_check(os.path.join(self._path, self.MEDIA_PATH)), self._filename)
         with open(path, 'wb') as outfile:
             outfile.write(self._raw_data)
-        os.utime(path, (self._created_date.timestamp(), self._created_date.timestamp()))
+        try:
+            timestamp = datetime.strptime(self._created_date, self.TIME_FORMAT).timestamp()
+            os.utime(path, (timestamp, timestamp))
+        except:
+            pass
         self._raw_data = b""
 
     def create_filename(self, keep_file_names):
         base = self._filename
 
-        if self._filename.count('.') >= 1:
-            extension = self._filename.split('.')[-1]
-            base = self._filename.rstrip('.' + extension)
-        else:
-            try:
-                # Create an extension if no original filename found.
-                extension = mimetypes.guess_extension(self._mime, False)[1:]
-                if extension == "jpe":
-                    extension = "jpg"
-            except (ValueError, TypeError):
-                extension = "unknown"
+        # if self._filename.count('.') >= 1:
+        #     extension = self._filename.split('.')[-1]
+        #     base = self._filename.rstrip('.' + extension)
+        # else:
+        try:
+            # Create an extension if no original filename found.
+            extension = mimetypes.guess_extension(self._mime, False)[1:]
+            if extension == "jpe":
+                extension = "jpg"
+        except (ValueError, TypeError):
+            extension = "unknown"
 
-        if keep_file_names and base:
+        if base:
             # Limit filename length to 128 characters
             self._filename = path_safe_string(base[:128]) + '.' + extension
         else:
             # Create a filename from created date if none found or unwanted
-            self._filename = self._created_date.strftime(self.TIME_FORMAT) + '.' + extension
+            self._filename = self._created_date.replace(':', '-') + '.' + extension
 
         # Remove spaces from filenames since markdown links won't work with spaces
         self._filename = self._filename.replace(" ", "_")

@@ -16,7 +16,7 @@ class EvernoteDump(Tk):
         super().__init__()
         self.settings = Settings()
 
-        self.iconbitmap(os.path.join(SCRIPT_PATH, 'favicon.ico'))
+        # self.iconbitmap(os.path.join(SCRIPT_PATH, 'favicon.ico'))
         self.title('Evernote Dump')
         self.geometry("500x600")
 

@@ -32,8 +32,8 @@ class Note(object):
         # Extracted
         self._title = ""
         self._html = ""
-        self._created_date = datetime.now()
-        self._updated_date = self._created_date
+        self._created_date = '?'
+        self._updated_date = '?'
         self._tags = []
         self._attributes = []
         self._path = ""
@@ -114,8 +114,15 @@ class Note(object):
     def create_file(self):
         with open(os.path.join(self._path, self._filename), 'w', encoding='UTF-8', errors='replace') as outfile:
             outfile.write(self._markdown)
-        os.utime(os.path.join(self._path, self._filename),
-                 (self._created_date.timestamp(), self._updated_date.timestamp()))
+        try:
+            # Everything seems to have created date, but not updated date
+            # linux can not set crtime, only mtime. atime is useless
+            os.utime(os.path.join(self._path, self._filename), ( # (atime, mtime)
+                    datetime.strptime(self._created_date, self.TIME_FORMAT).timestamp(),
+                    datetime.strptime(self._updated_date, self.TIME_FORMAT).timestamp(),
+                ))
+        except:
+            pass
 
     def create_filename(self):
         # make sure title can be converted to filename
@@ -161,8 +168,8 @@ class Note(object):
     def create_markdown_note_attr(self):
         self._markdown += "\n---"
         self._markdown += "\n### NOTE ATTRIBUTES"
-        self._markdown += "\n>Created Date: " + self._created_date.strftime(self.TIME_FORMAT) + "  "
-        self._markdown += "\n>Last Evernote Update Date: " + self._updated_date.strftime(self.TIME_FORMAT) + "  "
+        self._markdown += "\n>Created Date: " + self._created_date + "  "
+        self._markdown += "\n>Last Evernote Update Date: " + self._updated_date + "  "
         if len(self._attributes) > 0:
             for attr in self._attributes:
                 self._markdown += "\n>%s: %s  " % (attr[0], attr[1])
@@ -194,15 +201,17 @@ class Note(object):
 
     def set_created_date(self, date_string):
         try:
-            self._created_date = datetime.strptime(date_string, self.ISO_DATE_FORMAT)
+            self._created_date = datetime.strptime(date_string, self.ISO_DATE_FORMAT).strftime(self.TIME_FORMAT)
         except (TypeError, ValueError):
-            self._created_date = datetime.now()
+            self._created_date = date_string
+            # self._created_date = datetime.now()
 
     def set_updated_date(self, date_string):
         try:
-            self._updated_date = datetime.strptime(date_string, self.ISO_DATE_FORMAT)
+            self._updated_date = datetime.strptime(date_string, self.ISO_DATE_FORMAT).strftime(self.TIME_FORMAT)
         except (TypeError, ValueError):
-            self._created_date = datetime.now()
+            self._updated_date = date_string
+            # self._created_date = datetime.now()
 
     def set_path(self, path):
         self._path = path
